@@ -57,7 +57,6 @@ def create_app(test_config=None):
         client_kwargs=None,
     )
 
-
     @app.route("/login")
     def login():
         """user log in entrypoint"""
@@ -69,22 +68,25 @@ def create_app(test_config=None):
         """process the user once authorized on OSM"""
         token = oauth.osm.authorize_access_token()
         resp = oauth.osm.get("user/details")
-        session["osm_user"] = User.from_xml(resp.text).json()
-        session["token"] = token
+        user = User.from_xml(resp.text)
+        session["user_osm_id"] = user.osm_id
+        session["user_osm_display_name"] = user.display_name
+        session["user_access_token"] = token
         return redirect("/")
 
     @app.route("/logout")
     def logout():
-        session.pop("osm_user")
-        session.pop("token")
+        session.pop("user_osm_id")
+        session.pop("user_osm_display_name")
+        session.pop("user_access_token")
         return redirect("/")
 
     @app.route("/")
     def home():
         """home page"""
-        if "osm_user" in session:
-            osm_user = json.loads(session["osm_user"])
-            return "hello, {}. <a href={}>logout</a>".format(osm_user["display_name"], url_for("logout"))
+        return render_template("home.html")
+        if "user_access_token" in session:
+            return "hello {}. <a href={}>logout</a>".format(session["user_osm_display_name"], url_for("logout"))
         else:
-            return "hello, you probably want to <a href={}>log in</a>".format(url_for("login"))
+            return "hello person. You may want to <a href={}>log in</a>".format(url_for("login"))
     return app
