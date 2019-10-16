@@ -1,0 +1,9 @@
+<!doctype html>
+<title>{% block title %}{% endblock %} - OSM Meetups</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <h1>OSM OAuth example</h1>
+  {% if session.access_token %}
+    <p> You are {{ session.display_name }}. <a href="{{ url_for('logout') }}">Log Out</a>
+  {% else %}
+    <p><a href="{{ url_for('login') }}">Log In (with OSM)</a>
+  {% endif %}

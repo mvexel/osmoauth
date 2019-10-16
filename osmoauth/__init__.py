@@ -24,9 +24,8 @@ def create_app(test_config=None):
     cache = Cache()
     app.config.from_mapping(
         SECRET_KEY="dev",
-        DATABASE=os.path.join(app.instance_path, "osmmeetups.sqlite"),
-        OSM_OAUTH_CLIENT_ID=os.environ.get("OSM_OAUTH_CLIENT_ID"),
-        OSM_OAUTH_CLIENT_SECRET=os.environ.get("OSM_OAUTH_CLIENT_SECRET")
+        OSM_CONSUMER_KEY=os.environ.get("OSM_CONSUMER_KEY"),
+        OSM_CONSUMER_SECRET=os.environ.get("OSM_CONSUMER_SECRET")
     )
 
     if test_config is None:
@@ -46,8 +45,8 @@ def create_app(test_config=None):
 
     oauth.register(
         name="osm",
-        client_id=app.config.get("OSM_OAUTH_CLIENT_ID"),
-        client_secret=app.config.get("OSM_OAUTH_CLIENT_SECRET"),
+        client_id=app.config.get("OSM_CONSUMER_KEY"),
+        client_secret=app.config.get("OSM_CONSUMER_SECRET"),
         request_token_url="https://www.openstreetmap.org/oauth/request_token",
         request_token_params=None,
         access_token_url="https://www.openstreetmap.org/oauth/access_token",
@@ -69,24 +68,19 @@ def create_app(test_config=None):
         token = oauth.osm.authorize_access_token()
         resp = oauth.osm.get("user/details")
         user = User.from_xml(resp.text)
-        session["user_osm_id"] = user.osm_id
-        session["user_osm_display_name"] = user.display_name
-        session["user_access_token"] = token
+        session["osm_id"] = user.osm_id
+        session["display_name"] = user.display_name
+        session["access_token"] = token
         return redirect("/")
 
     @app.route("/logout")
     def logout():
-        session.pop("user_osm_id")
-        session.pop("user_osm_display_name")
-        session.pop("user_access_token")
+        session.clear()
         return redirect("/")
 
     @app.route("/")
     def home():
         """home page"""
         return render_template("home.html")
-        if "user_access_token" in session:
-            return "hello {}. <a href={}>logout</a>".format(session["user_osm_display_name"], url_for("logout"))
-        else:
-            return "hello person. You may want to <a href={}>log in</a>".format(url_for("login"))
+    
     return app
