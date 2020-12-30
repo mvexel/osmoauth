@@ -1,7 +1,7 @@
 import os
 from flask import Flask, url_for, render_template, redirect, session
-from authlib.flask.client import OAuth
-from .osm import User
+from authlib.integrations.flask_client import OAuth
+from osm import User
 import json
 
 class Cache:
